@@ -1,0 +1,69 @@
+<?php
+/**
+ * MCP Schema for LearnDashCourseMCP v1.0
+ */
+class CO360_LDNLMCP_MCP_Schema {
+
+    /**
+     * Return JSON schema for LearnDashCourseMCP v1.0
+     *
+     * @return array
+     */
+    public function get_schema() {
+        return array(
+            'type'       => 'object',
+            'required'   => array( 'version', 'course' ),
+            'properties' => array(
+                'version' => array(
+                    'type'    => 'string',
+                    'enum'    => array( '1.0.0' ),
+                ),
+                'course'  => array(
+                    'type'       => 'object',
+                    'required'   => array( 'title', 'credits', 'modules' ),
+                    'properties' => array(
+                        'title'   => array( 'type' => 'string' ),
+                        'credits' => array( 'type' => 'integer', 'minimum' => 1 ),
+                        'level'   => array( 'type' => 'string' ),
+                        'type'    => array( 'type' => 'string' ),
+                        'language'=> array( 'type' => 'string' ),
+                        'modules' => array(
+                            'type'  => 'array',
+                            'items' => array(
+                                'type'       => 'object',
+                                'required'   => array( 'title', 'order' ),
+                                'properties' => array(
+                                    'title'   => array( 'type' => 'string' ),
+                                    'order'   => array( 'type' => 'integer' ),
+                                    'lessons' => array(
+                                        'type'  => 'array',
+                                        'items' => array(
+                                            'type'       => 'object',
+                                            'required'   => array( 'title', 'order' ),
+                                            'properties' => array(
+                                                'title' => array( 'type' => 'string' ),
+                                                'order' => array( 'type' => 'integer' ),
+                                            ),
+                                        ),
+                                    ),
+                                    'quizzes' => array(
+                                        'type'  => 'array',
+                                        'items' => array(
+                                            'type'       => 'object',
+                                            'required'   => array( 'title', 'order' ),
+                                            'properties' => array(
+                                                'title' => array( 'type' => 'string' ),
+                                                'order' => array( 'type' => 'integer' ),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                        'final_exam' => array( 'type' => 'boolean' ),
+                    ),
+                ),
+            ),
+        );
+    }
+}
