@@ -39,9 +39,12 @@ class CO360_LDMCP_OpenAI_Client {
             'model'           => $model,
             'messages'        => $messages,
             'response_format' => [
-                'type'  => 'json_schema',
-                'json_schema' => $schema,
-                'strict' => true,
+                'type'        => 'json_schema',
+                'json_schema' => [
+                    'name'   => $schema['name'] ?? 'LearnDashCourseMCP',
+                    'schema' => $schema['schema'] ?? [],
+                    'strict' => true,
+                ],
             ],
         ];
 
@@ -65,11 +68,36 @@ class CO360_LDMCP_OpenAI_Client {
             return $response;
         }
 
-        $data = json_decode( wp_remote_retrieve_body( $response ), true );
-        if ( empty( $data['output_parsed'] ) ) {
-            return new WP_Error( 'co360_invalid_response', 'La respuesta de OpenAI no contiene JSON válido.' );
+        $body_json = wp_remote_retrieve_body( $response );
+        $data      = json_decode( $body_json, true );
+
+        if ( isset( $data['error']['message'] ) ) {
+            return new WP_Error( 'co360_openai_error', $data['error']['message'], $data['error'] );
         }
 
-        return $data['output_parsed'];
+        if ( ! is_array( $data ) ) {
+            return new WP_Error( 'co360_invalid_response', 'La respuesta de OpenAI no contiene JSON válido.', [ 'raw' => $body_json ] );
+        }
+
+        if ( ! empty( $data['output_parsed'] ) ) {
+            return $data['output_parsed'];
+        }
+
+        // Responses API returns `output` when schema parsing fails; attempt to decode it to provide a helpful error.
+        if ( ! empty( $data['output'] ) ) {
+            $output = is_array( $data['output'] ) ? implode( '\n', array_map( 'strval', $data['output'] ) ) : (string) $data['output'];
+            $decoded = json_decode( $output, true );
+            if ( json_last_error() === JSON_ERROR_NONE && is_array( $decoded ) ) {
+                return $decoded;
+            }
+
+            return new WP_Error(
+                'co360_invalid_response',
+                'La respuesta de OpenAI no contiene JSON válido.',
+                [ 'raw' => $output ]
+            );
+        }
+
+        return new WP_Error( 'co360_invalid_response', 'La respuesta de OpenAI no contiene JSON válido.', [ 'raw' => $body_json ] );
     }
 }

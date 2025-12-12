@@ -23,6 +23,7 @@ class CO360_LDMCP_Generate_MCP_Page {
     public function render(): void {
         $generator = new CO360_LDMCP_MCP_AI_Generator();
         $output    = null;
+        $error     = null;
 
         if ( isset( $_POST['co360_ldmcp_generate_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['co360_ldmcp_generate_nonce'] ) ), 'co360_ldmcp_generate' ) ) {
             $briefing = sanitize_textarea_field( wp_unslash( $_POST['briefing'] ?? '' ) );
@@ -33,7 +34,12 @@ class CO360_LDMCP_Generate_MCP_Page {
                 'level'         => sanitize_text_field( wp_unslash( $_POST['level'] ?? 'avanzado' ) ),
                 'accreditation' => ! empty( $_POST['accreditation'] ),
             ];
-            $output   = $generator->generate( $briefing, $type, $context );
+            $result = $generator->generate( $briefing, $type, $context );
+            if ( is_wp_error( $result ) ) {
+                $error = $result;
+            } else {
+                $output = $result;
+            }
         }
         ?>
         <div class="wrap">
@@ -55,6 +61,12 @@ class CO360_LDMCP_Generate_MCP_Page {
                     <label><input type="checkbox" name="accreditation" checked /> Acreditación</label></p>
                 <?php submit_button( __( 'Generar MCP con IA', 'co360-learndash-mcp-ai' ) ); ?>
             </form>
+            <?php if ( $error ) : ?>
+                <div class="notice notice-error"><p><?php echo esc_html( $error->get_error_message() ); ?></p>
+                <?php if ( $error->get_error_data() ) : ?>
+                    <pre><?php echo esc_html( wp_json_encode( $error->get_error_data(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) ); ?></pre>
+                <?php endif; ?></div>
+            <?php endif; ?>
             <?php if ( $output ) : ?>
                 <h2><?php esc_html_e( 'MCP generado', 'co360-learndash-mcp-ai' ); ?></h2>
                 <pre><?php echo esc_html( wp_json_encode( $output, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE ) ); ?></pre>
