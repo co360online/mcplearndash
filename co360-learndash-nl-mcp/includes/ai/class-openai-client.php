@@ -22,21 +22,18 @@ class CO360_LDNLMCP_OpenAI_Client {
         }
 
         $body = array(
-            'model'    => $model,
-            'messages' => array(
-                array(
-                    'role'    => 'system',
-                    'content' => $prompt,
-                ),
-            ),
-            'temperature' => $temperature,
+            'model'             => $model,
+            'input'             => $prompt,
+            'temperature'       => $temperature,
             'max_output_tokens' => $max_tokens,
-            'response_format' => array(
-                'type'   => 'json_schema',
-                'json_schema' => array(
-                    'name'   => 'LearnDashCourseMCP',
-                    'schema' => $schema,
-                    'strict' => true,
+            'text'              => array(
+                'format' => array(
+                    'type'        => 'json_schema',
+                    'json_schema' => array(
+                        'name'   => 'LearnDashCourseMCP',
+                        'schema' => $schema,
+                        'strict' => true,
+                    ),
                 ),
             ),
         );
