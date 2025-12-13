@@ -21,7 +21,7 @@ class CO360_LDNLMCP_MCP_Schema {
                 ),
                 'course'  => array(
                     'type'                 => 'object',
-                    'required'             => array( 'title', 'credits', 'modules' ),
+                    'required'             => array( 'title', 'credits', 'level', 'type', 'language', 'modules', 'final_exam' ),
                     'additionalProperties' => false,
                     'properties'           => array(
                         'title'   => array( 'type' => 'string' ),
@@ -33,7 +33,7 @@ class CO360_LDNLMCP_MCP_Schema {
                             'type'  => 'array',
                             'items' => array(
                                 'type'                 => 'object',
-                                'required'             => array( 'title', 'order' ),
+                                'required'             => array( 'title', 'order', 'lessons', 'quizzes' ),
                                 'additionalProperties' => false,
                                 'properties'           => array(
                                     'title'   => array( 'type' => 'string' ),
