@@ -11,17 +11,19 @@ class CO360_LDNLMCP_MCP_Schema {
      */
     public function get_schema() {
         return array(
-            'type'       => 'object',
-            'required'   => array( 'version', 'course' ),
-            'properties' => array(
+            'type'                 => 'object',
+            'required'             => array( 'version', 'course' ),
+            'additionalProperties' => false,
+            'properties'           => array(
                 'version' => array(
                     'type'    => 'string',
                     'enum'    => array( '1.0.0' ),
                 ),
                 'course'  => array(
-                    'type'       => 'object',
-                    'required'   => array( 'title', 'credits', 'modules' ),
-                    'properties' => array(
+                    'type'                 => 'object',
+                    'required'             => array( 'title', 'credits', 'modules' ),
+                    'additionalProperties' => false,
+                    'properties'           => array(
                         'title'   => array( 'type' => 'string' ),
                         'credits' => array( 'type' => 'integer', 'minimum' => 1 ),
                         'level'   => array( 'type' => 'string' ),
@@ -30,17 +32,19 @@ class CO360_LDNLMCP_MCP_Schema {
                         'modules' => array(
                             'type'  => 'array',
                             'items' => array(
-                                'type'       => 'object',
-                                'required'   => array( 'title', 'order' ),
-                                'properties' => array(
+                                'type'                 => 'object',
+                                'required'             => array( 'title', 'order' ),
+                                'additionalProperties' => false,
+                                'properties'           => array(
                                     'title'   => array( 'type' => 'string' ),
                                     'order'   => array( 'type' => 'integer' ),
                                     'lessons' => array(
                                         'type'  => 'array',
                                         'items' => array(
-                                            'type'       => 'object',
-                                            'required'   => array( 'title', 'order' ),
-                                            'properties' => array(
+                                            'type'                 => 'object',
+                                            'required'             => array( 'title', 'order' ),
+                                            'additionalProperties' => false,
+                                            'properties'           => array(
                                                 'title' => array( 'type' => 'string' ),
                                                 'order' => array( 'type' => 'integer' ),
                                             ),
@@ -49,9 +53,10 @@ class CO360_LDNLMCP_MCP_Schema {
                                     'quizzes' => array(
                                         'type'  => 'array',
                                         'items' => array(
-                                            'type'       => 'object',
-                                            'required'   => array( 'title', 'order' ),
-                                            'properties' => array(
+                                            'type'                 => 'object',
+                                            'required'             => array( 'title', 'order' ),
+                                            'additionalProperties' => false,
+                                            'properties'           => array(
                                                 'title' => array( 'type' => 'string' ),
                                                 'order' => array( 'type' => 'integer' ),
                                             ),
