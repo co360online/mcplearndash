@@ -28,6 +28,7 @@ class CO360_LDNLMCP_OpenAI_Client {
             'max_output_tokens' => $max_tokens,
             'text'              => array(
                 'format' => array(
+                    'name'        => 'LearnDashCourseMCP',
                     'type'        => 'json_schema',
                     'json_schema' => array(
                         'name'   => 'LearnDashCourseMCP',
