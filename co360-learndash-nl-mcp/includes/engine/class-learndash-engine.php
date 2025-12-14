@@ -68,8 +68,7 @@ class CO360_LDNLMCP_Learndash_Engine {
                         return $topic_id;
                     }
 
-                    $this->set_course_for_step( $topic_id, $course_id );
-                    $this->set_step_parent( $topic_id, $lesson_id );
+                    $this->set_course_for_step( $topic_id, $course_id, $lesson_id );
                 }
             }
 
@@ -86,8 +85,7 @@ class CO360_LDNLMCP_Learndash_Engine {
                         return $quiz_id;
                     }
 
-                    $this->set_course_for_step( $quiz_id, $course_id );
-                    $this->set_step_parent( $quiz_id, $lesson_id );
+                    $this->set_course_for_step( $quiz_id, $course_id, $lesson_id );
                 }
             }
         }
@@ -116,38 +114,26 @@ class CO360_LDNLMCP_Learndash_Engine {
      * @param int $step_id   Step post ID.
      * @param int $course_id Course post ID.
      */
-    private function set_course_for_step( $step_id, $course_id ) {
+    private function set_course_for_step( $step_id, $course_id, $parent_id = 0 ) {
+        if ( function_exists( 'ld_update_course_step' ) ) {
+            ld_update_course_step( $course_id, $step_id, $parent_id );
+            return;
+        }
+
         if ( function_exists( 'learndash_set_course_for_step' ) ) {
             learndash_set_course_for_step( $step_id, $course_id );
-            return;
         }
 
         // Fallback: ensure hierarchical link and course meta for older LD versions.
         wp_update_post( array(
             'ID'          => $step_id,
-            'post_parent' => $course_id,
+            'post_parent' => $parent_id ? $parent_id : $course_id,
         ) );
 
         update_post_meta( $step_id, 'course_id', $course_id );
-    }
 
-    /**
-     * Link a step to its parent lesson/module with graceful degradation when LD helper is missing.
-     *
-     * @param int $step_id   Child step ID.
-     * @param int $parent_id Parent lesson/module ID.
-     */
-    private function set_step_parent( $step_id, $parent_id ) {
-        if ( function_exists( 'learndash_set_lesson_assignment' ) ) {
-            learndash_set_lesson_assignment( $step_id, $parent_id );
-            return;
+        if ( $parent_id ) {
+            update_post_meta( $step_id, 'lesson_id', $parent_id );
         }
-
-        wp_update_post( array(
-            'ID'          => $step_id,
-            'post_parent' => $parent_id,
-        ) );
-
-        update_post_meta( $step_id, 'lesson_id', $parent_id );
     }
 }
