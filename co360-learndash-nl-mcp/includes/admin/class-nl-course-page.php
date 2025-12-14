@@ -44,6 +44,7 @@ class CO360_LDNLMCP_NL_Course_Page {
         $gf_forms = $gf_scanner->list_forms();
         $acf_scanner = new CO360_LDNLMCP_ACF_Scanner();
         $acf_fields_for_template = $selected_template ? $acf_scanner->get_fields_for_template( $selected_template ) : array();
+        $content_section_available = ! empty( $elementor_templates );
 
         if ( isset( $_POST['co360_ldnlmcp_content_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_content_nonce'] ) ), 'co360_ldnlmcp_content' ) ) {
             $selected_topic    = isset( $_POST['co360_ldnlmcp_topic'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_topic'] ) ) : '';
@@ -213,9 +214,9 @@ class CO360_LDNLMCP_NL_Course_Page {
                 </form>
             <?php endif; ?>
 
-            <?php if ( $preview_mcp && ! empty( $preview_array['course']['modules'] ) ) : ?>
-                <h2><?php esc_html_e( 'Contenido por tema', 'co360-ldnlmcp' ); ?></h2>
-                <p><?php esc_html_e( 'Selecciona el tema, el template de Elementor, asigna campos ACF reales y (opcionalmente) un formulario de Gravity Forms. El sistema generará una instrucción de lenguaje controlado y la añadirá al prompt.', 'co360-ldnlmcp' ); ?></p>
+            <?php if ( $preview_mcp && ! empty( $preview_array['course']['modules'] ) && $content_section_available ) : ?>
+                <h2><?php esc_html_e( 'Contenido opcional por tema (Elementor / ACF / Gravity Forms)', 'co360-ldnlmcp' ); ?></h2>
+                <p><?php esc_html_e( 'Solo úsalo si quieres añadir contenido real. Selecciona el tema, el template de Elementor publicado, asigna campos ACF reales y (opcionalmente) un formulario de Gravity Forms. El sistema generará una instrucción de lenguaje controlado y la añadirá al prompt.', 'co360-ldnlmcp' ); ?></p>
                 <form method="post">
                     <?php wp_nonce_field( 'co360_ldnlmcp_content', 'co360_ldnlmcp_content_nonce' ); ?>
                     <input type="hidden" name="co360_ldnlmcp_description" value="<?php echo esc_attr( $description ); ?>" />
@@ -286,6 +287,10 @@ class CO360_LDNLMCP_NL_Course_Page {
                     </table>
                     <?php submit_button( __( 'Generar instrucción para el MCP', 'co360-ldnlmcp' ), 'secondary' ); ?>
                 </form>
+            <?php elseif ( $preview_mcp && ! empty( $preview_array['course']['modules'] ) ) : ?>
+                <div class="notice notice-info" style="padding:12px; margin-top:20px;">
+                    <p><?php esc_html_e( 'Activa Elementor y publica al menos un template para habilitar la asignación opcional de contenido por tema. Gravity Forms es opcional.', 'co360-ldnlmcp' ); ?></p>
+                </div>
             <?php endif; ?>
 
             <?php if ( $preview_tree ) : ?>

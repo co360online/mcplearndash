@@ -38,7 +38,16 @@ class CO360_LDNLMCP_MCP_Definition {
         foreach ( $payload['course']['modules'] as $module_index => $module ) {
             if ( ! empty( $module['lessons'] ) ) {
                 foreach ( $module['lessons'] as $lesson_index => $lesson ) {
-                    if ( isset( $lesson['content_block'] ) ) {
+                    if ( array_key_exists( 'content_block', $lesson ) ) {
+                        if ( null === $lesson['content_block'] ) {
+                            $payload['course']['modules'][ $module_index ]['lessons'][ $lesson_index ]['content_block'] = null;
+                            continue;
+                        }
+
+                        if ( ! is_array( $lesson['content_block'] ) ) {
+                            return new WP_Error( 'co360_ldnlmcp_cb_invalid', __( 'El content_block debe ser un objeto o null.', 'co360-ldnlmcp' ) );
+                        }
+
                         $result = $content_block_resolver->validate_and_enrich( $lesson['content_block'] );
                         if ( is_wp_error( $result ) ) {
                             return $result;

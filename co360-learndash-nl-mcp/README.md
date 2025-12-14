@@ -17,7 +17,7 @@ El Model Context Protocol define el contrato entre la intención humana y la eje
 - Módulos anidados dentro del curso.
 - Temas y tests anidados dentro de módulos.
 - Opción de examen final.
-- (v1.1) Un tema puede tener **un único content_block** que referencia un template de Elementor, campos ACF válidos para ese template y opcionalmente un formulario de Gravity Forms real.
+- (v1.1) Un tema puede tener **un único content_block opcional** que referencia un template de Elementor, campos ACF válidos para ese template y opcionalmente un formulario de Gravity Forms real.
 
 Si faltan créditos, módulos o relaciones jerárquicas, el MCP rechaza la petición.
 
@@ -28,7 +28,7 @@ Si faltan créditos, módulos o relaciones jerárquicas, el MCP rechaza la petic
 3. Opcional: selecciona tipo, nivel, idioma y activa "Simular" para no crear nada.
 4. Pulsa **Generar estructura**. La IA recibe un prompt fijo y devuelve **solo JSON MCP** usando structured outputs.
 5. El MCP valida el payload y muestra la vista previa (árbol del curso).
-6. Si quieres añadir contenido real a un tema, usa la sección **Contenido por tema** (ver abajo) y vuelve a pulsar **Generar estructura** para que la IA traduzca las instrucciones a MCP.
+6. Si quieres añadir contenido real a un tema, usa la sección **Contenido opcional por tema** (solo se muestra cuando Elementor está activo y hay templates publicados) y vuelve a pulsar **Generar estructura** para que la IA traduzca las instrucciones a MCP.
 7. Pulsa **Crear curso en LearnDash** para ejecutar el plan. Si está en dry-run, solo verás el plan.
 
 ## Ejemplos de frases soportadas
@@ -68,10 +68,10 @@ Marca "Simular" para ejecutar en modo seguro. No se crea contenido, pero verás 
 
 ## Asignación de contenido a temas
 
-1. Genera la estructura MCP del curso.
-2. En **Contenido por tema** elige el tema (Módulo → Tema), selecciona un template de Elementor publicado, completa los campos ACF que se detecten para ese template y (si aplica) elige un formulario de Gravity Forms.
+1. Genera la estructura MCP del curso (sin necesidad de contenido adicional).
+2. Si quieres contenido, en **Contenido opcional por tema (Elementor / ACF / Gravity Forms)** elige el tema (Módulo → Tema), selecciona un template de Elementor publicado, completa los campos ACF que se detecten para ese template y (si aplica) elige un formulario de Gravity Forms. Esta sección no aparece si Elementor o Gravity Forms no están activos.
 3. Pulsa **Generar instrucción para el MCP**. El sistema añade al textarea principal una instrucción en lenguaje natural controlado (sin shortcodes ni JSON).
-4. Vuelve a pulsar **Generar estructura** para que la IA traduzca la instrucción a `content_block` dentro del MCP.
+4. Vuelve a pulsar **Generar estructura** para que la IA traduzca la instrucción a `content_block` dentro del MCP solo si existen esas instrucciones explícitas (si no hay instrucciones, no se añade `content_block`).
 5. Ejecuta el MCP. El engine:
    - Inserta el template de Elementor como contenido del tema.
    - Asigna los campos ACF al post del tema.

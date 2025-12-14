@@ -48,17 +48,15 @@ class CO360_LDNLMCP_MCP_Schema {
                                                 'title' => array( 'type' => 'string' ),
                                                 'order' => array( 'type' => 'integer' ),
                                                 'content_block' => array(
-                                                    'type'                 => 'object',
-                                                    'required'             => array( 'type', 'template_id', 'acf_fields', 'gravity_form_id' ),
+                                                    'type'                 => array( 'object', 'null' ),
+                                                    'required'             => array( 'type', 'template_id' ),
                                                     'additionalProperties' => false,
                                                     'properties'           => array(
                                                         'type'            => array( 'type' => 'string', 'enum' => array( 'elementor_template' ) ),
                                                         'template_id'     => array( 'type' => 'integer', 'minimum' => 1 ),
                                                         'acf_fields'      => array(
-                                                            'type'                 => 'object',
-                                                            'additionalProperties' => array(
-                                                                'type' => array( 'string', 'integer', 'number', 'boolean', 'null' ),
-                                                            ),
+                                                            'type'                 => array( 'object', 'null' ),
+                                                            'additionalProperties' => true,
                                                         ),
                                                         'gravity_form_id' => array( 'type' => array( 'integer', 'null' ) ),
                                                     ),

@@ -81,11 +81,20 @@ class CO360_LDNLMCP_Learndash_Engine {
                         $this->set_course_for_step( $topic_id, $course_id, $lesson_id );
                     }
 
-                    if ( isset( $lesson['content_block'] ) ) {
+                    if ( array_key_exists( 'content_block', $lesson ) && null !== $lesson['content_block'] ) {
                         $content_result = $this->apply_content_block( $topic_id, $lesson['content_block'], $dry_run, $lesson['title'] );
                         if ( is_wp_error( $content_result ) ) {
                             return $content_result;
                         }
+                    } else {
+                        ( new CO360_LDNLMCP_MCP_Logger() )->log(
+                            'Tema sin content_block',
+                            array(
+                                'stage' => 'content_block',
+                                'topic' => $lesson['title'],
+                                'status' => 'skipped',
+                            )
+                        );
                     }
                 }
             }
