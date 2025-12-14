@@ -23,6 +23,10 @@ class CO360_LDNLMCP_Learndash_Engine {
             return new WP_Error( 'co360_ldnlmcp_no_learndash', __( 'LearnDash no está activo. Solo puedes simular.', 'co360-ldnlmcp' ) );
         }
 
+        if ( ! function_exists( 'learndash_set_course_for_step' ) || ! function_exists( 'learndash_set_lesson_assignment' ) ) {
+            return new WP_Error( 'co360_ldnlmcp_missing_ld_functions', __( 'Las funciones clave de LearnDash no están disponibles. Verifica que LearnDash esté actualizado y activo.', 'co360-ldnlmcp' ) );
+        }
+
         $course = $plan['course'];
         $course_id = wp_insert_post( array(
             'post_type'   => 'sfwd-courses',
