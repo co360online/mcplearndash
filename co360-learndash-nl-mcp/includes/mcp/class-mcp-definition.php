@@ -29,8 +29,25 @@ class CO360_LDNLMCP_MCP_Definition {
         }
 
         // Basic schema check for version.
-        if ( empty( $payload['version'] ) || '1.0.0' !== $payload['version'] ) {
+        if ( empty( $payload['version'] ) || '1.1.0' !== $payload['version'] ) {
             return new WP_Error( 'co360_ldnlmcp_version', __( 'Versión MCP inválida.', 'co360-ldnlmcp' ) );
+        }
+
+        $content_block_resolver = new CO360_LDNLMCP_Content_Block_Resolver();
+
+        foreach ( $payload['course']['modules'] as $module_index => $module ) {
+            if ( ! empty( $module['lessons'] ) ) {
+                foreach ( $module['lessons'] as $lesson_index => $lesson ) {
+                    if ( isset( $lesson['content_block'] ) ) {
+                        $result = $content_block_resolver->validate_and_enrich( $lesson['content_block'] );
+                        if ( is_wp_error( $result ) ) {
+                            return $result;
+                        }
+                        // Persist enriched details for downstream execution.
+                        $payload['course']['modules'][ $module_index ]['lessons'][ $lesson_index ]['content_block'] = $result;
+                    }
+                }
+            }
         }
 
         return true;

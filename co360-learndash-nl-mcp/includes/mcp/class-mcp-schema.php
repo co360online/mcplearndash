@@ -1,11 +1,11 @@
 <?php
 /**
- * MCP Schema for LearnDashCourseMCP v1.0
+ * MCP Schema for LearnDashCourseMCP v1.1
  */
 class CO360_LDNLMCP_MCP_Schema {
 
     /**
-     * Return JSON schema for LearnDashCourseMCP v1.0
+     * Return JSON schema for LearnDashCourseMCP v1.1
      *
      * @return array
      */
@@ -17,7 +17,7 @@ class CO360_LDNLMCP_MCP_Schema {
             'properties'           => array(
                 'version' => array(
                     'type'    => 'string',
-                    'enum'    => array( '1.0.0' ),
+                    'enum'    => array( '1.1.0' ),
                 ),
                 'course'  => array(
                     'type'                 => 'object',
@@ -47,6 +47,22 @@ class CO360_LDNLMCP_MCP_Schema {
                                             'properties'           => array(
                                                 'title' => array( 'type' => 'string' ),
                                                 'order' => array( 'type' => 'integer' ),
+                                                'content_block' => array(
+                                                    'type'                 => 'object',
+                                                    'required'             => array( 'type', 'template_id', 'acf_fields', 'gravity_form_id' ),
+                                                    'additionalProperties' => false,
+                                                    'properties'           => array(
+                                                        'type'            => array( 'type' => 'string', 'enum' => array( 'elementor_template' ) ),
+                                                        'template_id'     => array( 'type' => 'integer', 'minimum' => 1 ),
+                                                        'acf_fields'      => array(
+                                                            'type'                 => 'object',
+                                                            'additionalProperties' => array(
+                                                                'type' => array( 'string', 'integer', 'number', 'boolean', 'null' ),
+                                                            ),
+                                                        ),
+                                                        'gravity_form_id' => array( 'type' => array( 'integer', 'null' ) ),
+                                                    ),
+                                                ),
                                             ),
                                         ),
                                     ),

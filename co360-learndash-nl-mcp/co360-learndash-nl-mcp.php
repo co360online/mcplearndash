@@ -3,7 +3,7 @@
  * Plugin Name: CO360 – LearnDash Natural Language Course Builder (MCP + AI)
  * Plugin URI: https://example.com
  * Description: Create LearnDash courses from controlled natural language using OpenAI governed by a Model Context Protocol (MCP).
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: CO360
  * Text Domain: co360-ldnlmcp
  */
@@ -22,7 +22,7 @@ if ( ! defined( 'CO360_LDNLMCP_URL' ) ) {
 }
 
 if ( ! defined( 'CO360_LDNLMCP_VERSION' ) ) {
-    define( 'CO360_LDNLMCP_VERSION', '1.0.0' );
+    define( 'CO360_LDNLMCP_VERSION', '1.1.0' );
 }
 
 // Simple autoloader for plugin classes.
@@ -40,6 +40,7 @@ spl_autoload_register( function ( $class ) {
         CO360_LDNLMCP_PATH . 'includes/engine/class-' . $file . '.php',
         CO360_LDNLMCP_PATH . 'includes/admin/class-' . $file . '.php',
         CO360_LDNLMCP_PATH . 'includes/logs/class-' . $file . '.php',
+        CO360_LDNLMCP_PATH . 'includes/content/class-' . $file . '.php',
     );
 
     foreach ( $paths as $path ) {

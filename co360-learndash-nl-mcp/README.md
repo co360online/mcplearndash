@@ -10,13 +10,14 @@ Este plugin convierte lenguaje natural controlado en cursos LearnDash utilizando
 
 ## ¿Qué es el MCP?
 
-El Model Context Protocol define el contrato entre la intención humana y la ejecución técnica. En este plugin el esquema `LearnDashCourseMCP v1.0` exige:
+El Model Context Protocol define el contrato entre la intención humana y la ejecución técnica. En este plugin el esquema `LearnDashCourseMCP v1.1` exige:
 
 - Versión obligatoria.
 - Curso con créditos > 0.
 - Módulos anidados dentro del curso.
 - Temas y tests anidados dentro de módulos.
 - Opción de examen final.
+- (v1.1) Un tema puede tener **un único content_block** que referencia un template de Elementor, campos ACF válidos para ese template y opcionalmente un formulario de Gravity Forms real.
 
 Si faltan créditos, módulos o relaciones jerárquicas, el MCP rechaza la petición.
 
@@ -27,7 +28,8 @@ Si faltan créditos, módulos o relaciones jerárquicas, el MCP rechaza la petic
 3. Opcional: selecciona tipo, nivel, idioma y activa "Simular" para no crear nada.
 4. Pulsa **Generar estructura**. La IA recibe un prompt fijo y devuelve **solo JSON MCP** usando structured outputs.
 5. El MCP valida el payload y muestra la vista previa (árbol del curso).
-6. Pulsa **Crear curso en LearnDash** para ejecutar el plan. Si está en dry-run, solo verás el plan.
+6. Si quieres añadir contenido real a un tema, usa la sección **Contenido por tema** (ver abajo) y vuelve a pulsar **Generar estructura** para que la IA traduzca las instrucciones a MCP.
+7. Pulsa **Crear curso en LearnDash** para ejecutar el plan. Si está en dry-run, solo verás el plan.
 
 ## Ejemplos de frases soportadas
 
@@ -51,7 +53,7 @@ En **CO360 → Ajustes IA** configura:
 - Max tokens
 - Botón de guardar
 
-La llamada usa la API de Responses con `response_format.type = json_schema`, `strict = true` y el schema de `LearnDashCourseMCP v1.0`.
+La llamada usa la API de Responses con `text.format.type = json_schema`, `strict = true` y el schema de `LearnDashCourseMCP v1.1`.
 
 ## Dry-run
 
@@ -63,6 +65,30 @@ Marca "Simular" para ejecutar en modo seguro. No se crea contenido, pero verás 
 - Nonces en los formularios de generación y ejecución.
 - Sanitización de todos los datos recibidos.
 - Si LearnDash no está activo, la ejecución real está bloqueada (solo simulación).
+
+## Asignación de contenido a temas
+
+1. Genera la estructura MCP del curso.
+2. En **Contenido por tema** elige el tema (Módulo → Tema), selecciona un template de Elementor publicado, completa los campos ACF que se detecten para ese template y (si aplica) elige un formulario de Gravity Forms.
+3. Pulsa **Generar instrucción para el MCP**. El sistema añade al textarea principal una instrucción en lenguaje natural controlado (sin shortcodes ni JSON).
+4. Vuelve a pulsar **Generar estructura** para que la IA traduzca la instrucción a `content_block` dentro del MCP.
+5. Ejecuta el MCP. El engine:
+   - Inserta el template de Elementor como contenido del tema.
+   - Asigna los campos ACF al post del tema.
+   - Inserta el formulario Gravity Forms elegido.
+   - Registra logs por cada `content_block` con template, campos y formulario aplicados.
+
+### Ejemplo de instrucción generada automáticamente
+
+```
+En el tema "Arquitecturas de modelos de IA":
+usar el template Elementor "Tema Vídeo + PDFs" (ID 327).
+Asignar:
+– Vídeo de Vimeo: 123456789
+– PDF descargable: Guía de arquitecturas IA
+– PDF descargable 2: Artículo técnico
+Incluir el formulario Gravity Forms "Evaluación Módulo 1" (ID 12).
+```
 
 ## Principio rector
 

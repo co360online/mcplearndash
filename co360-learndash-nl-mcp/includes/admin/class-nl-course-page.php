@@ -12,18 +12,81 @@ class CO360_LDNLMCP_NL_Course_Page {
             return;
         }
 
-        $preview_mcp = null;
-        $preview_tree = null;
-        $errors = array();
-        $success = '';
+        $preview_mcp   = null;
+        $preview_tree  = null;
+        $preview_array = array();
+        $errors        = array();
+        $success       = '';
+
+        $description = isset( $_POST['co360_ldnlmcp_description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['co360_ldnlmcp_description'] ) ) : '';
+        $course_type = isset( $_POST['co360_ldnlmcp_course_type'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_course_type'] ) ) : '';
+        $level       = isset( $_POST['co360_ldnlmcp_level'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_level'] ) ) : '';
+        $language    = isset( $_POST['co360_ldnlmcp_language'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_language'] ) ) : '';
+        $dry_run     = isset( $_POST['co360_ldnlmcp_dry_run'] ) ? (bool) $_POST['co360_ldnlmcp_dry_run'] : false;
+
+        $encoded_preview = isset( $_POST['co360_ldnlmcp_preview_payload'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_preview_payload'] ) ) : '';
+        if ( ! empty( $encoded_preview ) ) {
+            $decoded_preview = json_decode( base64_decode( $encoded_preview ), true );
+            if ( is_array( $decoded_preview ) ) {
+                $preview_array = $decoded_preview;
+                $preview_mcp   = wp_json_encode( $decoded_preview, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+                $preview_tree  = ( new CO360_LDNLMCP_MCP_Definition() )->to_tree( $decoded_preview );
+            }
+        }
+
+        $selected_topic    = isset( $_POST['co360_ldnlmcp_topic'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_topic'] ) ) : '';
+        $selected_template = isset( $_POST['co360_ldnlmcp_template'] ) ? intval( $_POST['co360_ldnlmcp_template'] ) : 0;
+        $selected_form     = isset( $_POST['co360_ldnlmcp_form'] ) ? intval( $_POST['co360_ldnlmcp_form'] ) : 0;
+
+        $elementor_scanner = new CO360_LDNLMCP_Elementor_Scanner();
+        $elementor_templates = $elementor_scanner->list_templates();
+        $gf_scanner = new CO360_LDNLMCP_GravityForms_Scanner();
+        $gf_forms = $gf_scanner->list_forms();
+        $acf_scanner = new CO360_LDNLMCP_ACF_Scanner();
+        $acf_fields_for_template = $selected_template ? $acf_scanner->get_fields_for_template( $selected_template ) : array();
+
+        if ( isset( $_POST['co360_ldnlmcp_content_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_content_nonce'] ) ), 'co360_ldnlmcp_content' ) ) {
+            $selected_topic    = isset( $_POST['co360_ldnlmcp_topic'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_topic'] ) ) : '';
+            $selected_template = isset( $_POST['co360_ldnlmcp_template'] ) ? intval( $_POST['co360_ldnlmcp_template'] ) : 0;
+            $selected_form     = isset( $_POST['co360_ldnlmcp_form'] ) ? intval( $_POST['co360_ldnlmcp_form'] ) : 0;
+
+            if ( empty( $preview_array ) ) {
+                $errors[] = __( 'Genera primero la estructura MCP para poder asignar contenido.', 'co360-ldnlmcp' );
+            } elseif ( empty( $selected_topic ) || false === strpos( $selected_topic, '|' ) ) {
+                $errors[] = __( 'Selecciona un tema válido para asignar contenido.', 'co360-ldnlmcp' );
+            } else {
+                list( $module_index, $lesson_index ) = array_map( 'intval', explode( '|', $selected_topic ) );
+                if ( ! isset( $preview_array['course']['modules'][ $module_index ]['lessons'][ $lesson_index ] ) ) {
+                    $errors[] = __( 'El tema seleccionado no existe en el MCP actual.', 'co360-ldnlmcp' );
+                } else {
+                    $topic_info = $preview_array['course']['modules'][ $module_index ]['lessons'][ $lesson_index ];
+                    $elementor  = new CO360_LDNLMCP_Elementor_Scanner();
+                    $acf        = new CO360_LDNLMCP_ACF_Scanner();
+                    $gf         = new CO360_LDNLMCP_GravityForms_Scanner();
+                    $template   = $elementor->get_template( $selected_template );
+
+                    if ( ! $template ) {
+                        $errors[] = __( 'Debes elegir un template de Elementor válido.', 'co360-ldnlmcp' );
+                    } else {
+                        $acf_meta   = $acf->get_fields_for_template( $selected_template );
+                        $acf_values = array();
+                        foreach ( $acf_meta as $field_key => $field_data ) {
+                            $field_value = isset( $_POST[ 'co360_ldnlmcp_acf_' . $field_key ] ) ? wp_unslash( $_POST[ 'co360_ldnlmcp_acf_' . $field_key ] ) : '';
+                            $acf_values[ $field_key ] = is_array( $field_value ) ? '' : sanitize_text_field( $field_value );
+                        }
+
+                        $form = $selected_form ? $gf->get_form( $selected_form ) : null;
+
+                        $instruction_builder = new CO360_LDNLMCP_Content_Instruction_Builder();
+                        $instruction = $instruction_builder->build_instruction( $topic_info, $template, $acf_values, $acf_meta, $form );
+                        $description = trim( $description . "\n\n" . $instruction );
+                        $success = __( 'Instrucción añadida al prompt. Vuelve a generar la estructura MCP.', 'co360-ldnlmcp' );
+                    }
+                }
+            }
+        }
 
         if ( isset( $_POST['co360_ldnlmcp_generate_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_generate_nonce'] ) ), 'co360_ldnlmcp_generate' ) ) {
-            $description = isset( $_POST['co360_ldnlmcp_description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['co360_ldnlmcp_description'] ) ) : '';
-            $course_type = isset( $_POST['co360_ldnlmcp_course_type'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_course_type'] ) ) : '';
-            $level       = isset( $_POST['co360_ldnlmcp_level'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_level'] ) ) : '';
-            $language    = isset( $_POST['co360_ldnlmcp_language'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_language'] ) ) : '';
-            $dry_run     = isset( $_POST['co360_ldnlmcp_dry_run'] ) ? (bool) $_POST['co360_ldnlmcp_dry_run'] : false;
-
             $intent = new CO360_LDNLMCP_NL_Intent( $description, $course_type, $level, $language );
             $validator = new CO360_LDNLMCP_NL_Validator();
             $errors = $validator->validate_intent( $intent );
@@ -40,6 +103,7 @@ class CO360_LDNLMCP_NL_Course_Page {
                     if ( is_wp_error( $validation ) ) {
                         $errors[] = $validation->get_error_message();
                     } else {
+                        $preview_array = $response;
                         $preview_mcp = wp_json_encode( $response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
                         $preview_tree = $mcp->to_tree( $response );
                         if ( $dry_run ) {
@@ -65,18 +129,25 @@ class CO360_LDNLMCP_NL_Course_Page {
                 } else {
                     $resolver = new CO360_LDNLMCP_MCP_Resolver();
                     $plan = $resolver->build_plan( $decoded );
-                    $engine = new CO360_LDNLMCP_Learndash_Engine();
-                    $result = $engine->execute_plan( $plan, $dry_run );
-                    if ( is_wp_error( $result ) ) {
-                        $errors[] = $result->get_error_message();
+                    if ( is_wp_error( $plan ) ) {
+                        $errors[] = $plan->get_error_message();
                     } else {
-                        $success = $dry_run ? __( 'Ejecución en modo simulación completada.', 'co360-ldnlmcp' ) : __( 'Curso creado en LearnDash.', 'co360-ldnlmcp' );
+                        $engine = new CO360_LDNLMCP_Learndash_Engine();
+                        $result = $engine->execute_plan( $plan, $dry_run );
+                        if ( is_wp_error( $result ) ) {
+                            $errors[] = $result->get_error_message();
+                        } else {
+                            $success = $dry_run ? __( 'Ejecución en modo simulación completada.', 'co360-ldnlmcp' ) : __( 'Curso creado en LearnDash.', 'co360-ldnlmcp' );
+                        }
                     }
+                    $preview_array = $decoded;
                     $preview_mcp = wp_json_encode( $decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
                     $preview_tree = $mcp->to_tree( $decoded );
                 }
             }
         }
+
+        $encoded_preview_payload = ! empty( $preview_array ) ? base64_encode( wp_json_encode( $preview_array ) ) : '';
 
         ?>
         <div class="wrap">
@@ -137,7 +208,83 @@ class CO360_LDNLMCP_NL_Course_Page {
                     <textarea readonly rows="15" class="large-text code" name="co360_ldnlmcp_raw_mcp"><?php echo esc_textarea( $preview_mcp ); ?></textarea>
                     <p><?php esc_html_e( 'El MCP gobierna la ejecución. La IA no crea directamente.', 'co360-ldnlmcp' ); ?></p>
                     <input type="hidden" name="co360_ldnlmcp_dry_run" value="<?php echo isset( $dry_run ) && $dry_run ? '1' : '0'; ?>" />
+                    <input type="hidden" name="co360_ldnlmcp_preview_payload" value="<?php echo esc_attr( $encoded_preview_payload ); ?>" />
                     <?php submit_button( __( 'Crear curso en LearnDash', 'co360-ldnlmcp' ) ); ?>
+                </form>
+            <?php endif; ?>
+
+            <?php if ( $preview_mcp && ! empty( $preview_array['course']['modules'] ) ) : ?>
+                <h2><?php esc_html_e( 'Contenido por tema', 'co360-ldnlmcp' ); ?></h2>
+                <p><?php esc_html_e( 'Selecciona el tema, el template de Elementor, asigna campos ACF reales y (opcionalmente) un formulario de Gravity Forms. El sistema generará una instrucción de lenguaje controlado y la añadirá al prompt.', 'co360-ldnlmcp' ); ?></p>
+                <form method="post">
+                    <?php wp_nonce_field( 'co360_ldnlmcp_content', 'co360_ldnlmcp_content_nonce' ); ?>
+                    <input type="hidden" name="co360_ldnlmcp_description" value="<?php echo esc_attr( $description ); ?>" />
+                    <input type="hidden" name="co360_ldnlmcp_course_type" value="<?php echo esc_attr( $course_type ); ?>" />
+                    <input type="hidden" name="co360_ldnlmcp_level" value="<?php echo esc_attr( $level ); ?>" />
+                    <input type="hidden" name="co360_ldnlmcp_language" value="<?php echo esc_attr( $language ); ?>" />
+                    <input type="hidden" name="co360_ldnlmcp_dry_run" value="<?php echo $dry_run ? '1' : '0'; ?>" />
+                    <input type="hidden" name="co360_ldnlmcp_preview_payload" value="<?php echo esc_attr( $encoded_preview_payload ); ?>" />
+                    <table class="form-table" role="presentation">
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Tema', 'co360-ldnlmcp' ); ?></th>
+                            <td>
+                                <select name="co360_ldnlmcp_topic" required>
+                                    <option value=""><?php esc_html_e( 'Selecciona un tema', 'co360-ldnlmcp' ); ?></option>
+                                    <?php foreach ( $preview_array['course']['modules'] as $module_index => $module ) : ?>
+                                        <?php if ( empty( $module['lessons'] ) ) { continue; } ?>
+                                        <?php foreach ( $module['lessons'] as $lesson_index => $lesson ) :
+                                            $value = $module_index . '|' . $lesson_index;
+                                            $label = sprintf( 'Módulo %d → Tema %d: %s', $module_index + 1, $lesson_index + 1, $lesson['title'] );
+                                            ?>
+                                            <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $selected_topic, $value ); ?>><?php echo esc_html( $label ); ?></option>
+                                        <?php endforeach; ?>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Template de Elementor', 'co360-ldnlmcp' ); ?></th>
+                            <td>
+                                <select name="co360_ldnlmcp_template" required>
+                                    <option value=""><?php esc_html_e( 'Selecciona template', 'co360-ldnlmcp' ); ?></option>
+                                    <?php foreach ( $elementor_templates as $template ) : ?>
+                                        <option value="<?php echo esc_attr( $template['id'] ); ?>" <?php selected( $selected_template, $template['id'] ); ?>><?php echo esc_html( $template['title'] . ' (ID ' . $template['id'] . ')' ); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if ( empty( $elementor_templates ) ) : ?>
+                                    <p class="description"><?php esc_html_e( 'No se encontraron templates de Elementor publicados.', 'co360-ldnlmcp' ); ?></p>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php if ( ! empty( $acf_fields_for_template ) ) : ?>
+                            <tr>
+                                <th scope="row"><?php esc_html_e( 'Campos ACF del template', 'co360-ldnlmcp' ); ?></th>
+                                <td>
+                                    <?php foreach ( $acf_fields_for_template as $field_key => $field ) : ?>
+                                        <p>
+                                            <label for="co360_ldnlmcp_acf_<?php echo esc_attr( $field_key ); ?>"><?php echo esc_html( $field['label'] . ' (' . $field_key . ')' ); ?></label><br />
+                                            <input type="text" id="co360_ldnlmcp_acf_<?php echo esc_attr( $field_key ); ?>" name="co360_ldnlmcp_acf_<?php echo esc_attr( $field_key ); ?>" value="<?php echo isset( $_POST[ 'co360_ldnlmcp_acf_' . $field_key ] ) ? esc_attr( wp_unslash( $_POST[ 'co360_ldnlmcp_acf_' . $field_key ] ) ) : ''; ?>" class="regular-text" />
+                                        </p>
+                                    <?php endforeach; ?>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                        <tr>
+                            <th scope="row"><?php esc_html_e( 'Formulario Gravity Forms (opcional)', 'co360-ldnlmcp' ); ?></th>
+                            <td>
+                                <select name="co360_ldnlmcp_form">
+                                    <option value="0"><?php esc_html_e( 'Ninguno', 'co360-ldnlmcp' ); ?></option>
+                                    <?php foreach ( $gf_forms as $form ) : ?>
+                                        <option value="<?php echo esc_attr( $form['id'] ); ?>" <?php selected( $selected_form, $form['id'] ); ?>><?php echo esc_html( $form['title'] . ' (ID ' . $form['id'] . ')' ); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if ( empty( $gf_forms ) ) : ?>
+                                    <p class="description"><?php esc_html_e( 'No se encontraron formularios de Gravity Forms.', 'co360-ldnlmcp' ); ?></p>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button( __( 'Generar instrucción para el MCP', 'co360-ldnlmcp' ), 'secondary' ); ?>
                 </form>
             <?php endif; ?>
 

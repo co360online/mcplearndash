@@ -10,6 +10,6 @@ class CO360_LDNLMCP_MCP_Versioning {
      * @return string
      */
     public function current_version() {
-        return '1.0.0';
+        return '1.1.0';
     }
 }
