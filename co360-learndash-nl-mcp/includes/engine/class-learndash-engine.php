@@ -19,12 +19,8 @@ class CO360_LDNLMCP_Learndash_Engine {
             return true;
         }
 
-        if ( ! function_exists( 'learndash_get_course_id' ) ) {
+        if ( ! function_exists( 'learndash_get_course_id' ) && ! defined( 'LEARNDASH_VERSION' ) ) {
             return new WP_Error( 'co360_ldnlmcp_no_learndash', __( 'LearnDash no está activo. Solo puedes simular.', 'co360-ldnlmcp' ) );
-        }
-
-        if ( ! function_exists( 'learndash_set_course_for_step' ) || ! function_exists( 'learndash_set_lesson_assignment' ) ) {
-            return new WP_Error( 'co360_ldnlmcp_missing_ld_functions', __( 'Las funciones clave de LearnDash no están disponibles. Verifica que LearnDash esté actualizado y activo.', 'co360-ldnlmcp' ) );
         }
 
         $course = $plan['course'];
@@ -57,7 +53,7 @@ class CO360_LDNLMCP_Learndash_Engine {
                 return $lesson_id;
             }
 
-            learndash_set_course_for_step( $lesson_id, $course_id );
+            $this->set_course_for_step( $lesson_id, $course_id );
 
             if ( ! empty( $module['lessons'] ) ) {
                 foreach ( $module['lessons'] as $lesson ) {
@@ -72,8 +68,8 @@ class CO360_LDNLMCP_Learndash_Engine {
                         return $topic_id;
                     }
 
-                    learndash_set_course_for_step( $topic_id, $course_id );
-                    learndash_set_lesson_assignment( $topic_id, $lesson_id );
+                    $this->set_course_for_step( $topic_id, $course_id );
+                    $this->set_step_parent( $topic_id, $lesson_id );
                 }
             }
 
@@ -90,8 +86,8 @@ class CO360_LDNLMCP_Learndash_Engine {
                         return $quiz_id;
                     }
 
-                    learndash_set_course_for_step( $quiz_id, $course_id );
-                    learndash_set_lesson_assignment( $quiz_id, $lesson_id );
+                    $this->set_course_for_step( $quiz_id, $course_id );
+                    $this->set_step_parent( $quiz_id, $lesson_id );
                 }
             }
         }
@@ -107,10 +103,51 @@ class CO360_LDNLMCP_Learndash_Engine {
                 return $quiz_id;
             }
 
-            learndash_set_course_for_step( $quiz_id, $course_id );
+            $this->set_course_for_step( $quiz_id, $course_id );
         }
 
         $logger->log( 'Plan completado', array( 'course_id' => $course_id ) );
         return true;
+    }
+
+    /**
+     * Link a step to a course using LearnDash helper when available, falling back to post_parent/meta.
+     *
+     * @param int $step_id   Step post ID.
+     * @param int $course_id Course post ID.
+     */
+    private function set_course_for_step( $step_id, $course_id ) {
+        if ( function_exists( 'learndash_set_course_for_step' ) ) {
+            learndash_set_course_for_step( $step_id, $course_id );
+            return;
+        }
+
+        // Fallback: ensure hierarchical link and course meta for older LD versions.
+        wp_update_post( array(
+            'ID'          => $step_id,
+            'post_parent' => $course_id,
+        ) );
+
+        update_post_meta( $step_id, 'course_id', $course_id );
+    }
+
+    /**
+     * Link a step to its parent lesson/module with graceful degradation when LD helper is missing.
+     *
+     * @param int $step_id   Child step ID.
+     * @param int $parent_id Parent lesson/module ID.
+     */
+    private function set_step_parent( $step_id, $parent_id ) {
+        if ( function_exists( 'learndash_set_lesson_assignment' ) ) {
+            learndash_set_lesson_assignment( $step_id, $parent_id );
+            return;
+        }
+
+        wp_update_post( array(
+            'ID'          => $step_id,
+            'post_parent' => $parent_id,
+        ) );
+
+        update_post_meta( $step_id, 'lesson_id', $parent_id );
     }
 }
