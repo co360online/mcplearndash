@@ -9,12 +9,16 @@ class CO360_LDNLMCP_Learndash_Engine {
      *
      * @param array $plan Execution plan.
      * @param bool  $dry_run Dry run.
+     * @param array $content_binding Optional content bindings keyed by module/lesson.
      * @return true|WP_Error
      */
-    public function execute_plan( $plan, $dry_run = false ) {
+    public function execute_plan( $plan, $dry_run = false, $content_binding = array() ) {
         $logger = new CO360_LDNLMCP_MCP_Logger();
         $logger->log( 'Ejecutando plan MCP', $plan );
         $course = $plan['course'];
+
+        $binding_model     = new CO360_LDNLMCP_Content_Binding( $content_binding );
+        $content_resolver  = new CO360_LDNLMCP_Content_Block_Resolver();
 
         if ( ! $dry_run && ! function_exists( 'learndash_get_course_id' ) && ! defined( 'LEARNDASH_VERSION' ) ) {
             return new WP_Error( 'co360_ldnlmcp_no_learndash', __( 'LearnDash no está activo. Solo puedes simular.', 'co360-ldnlmcp' ) );
@@ -42,7 +46,7 @@ class CO360_LDNLMCP_Learndash_Engine {
         }
 
         // Create modules as lessons (LearnDash does not have modules natively).
-        foreach ( $course['modules'] as $module ) {
+        foreach ( $course['modules'] as $module_index => $module ) {
             if ( $dry_run ) {
                 $lesson_id = 0;
                 $logger->log( 'Simulación: se crearía módulo/lección', array( 'title' => $module['title'] ) );
@@ -62,7 +66,7 @@ class CO360_LDNLMCP_Learndash_Engine {
             }
 
             if ( ! empty( $module['lessons'] ) ) {
-                foreach ( $module['lessons'] as $lesson ) {
+                foreach ( $module['lessons'] as $lesson_index => $lesson ) {
                     if ( $dry_run ) {
                         $topic_id = 0;
                         $logger->log( 'Simulación: se crearía tema', array( 'title' => $lesson['title'], 'module' => $module['title'] ) );
@@ -81,8 +85,13 @@ class CO360_LDNLMCP_Learndash_Engine {
                         $this->set_course_for_step( $topic_id, $course_id, $lesson_id );
                     }
 
-                    if ( array_key_exists( 'content_block', $lesson ) && null !== $lesson['content_block'] ) {
-                        $content_result = $this->apply_content_block( $topic_id, $lesson['content_block'], $dry_run, $lesson['title'] );
+                    $binding_block = $binding_model->get_content_block( $module_index, $lesson_index );
+                    if ( null !== $binding_block ) {
+                        $validated_block = $content_resolver->validate_and_enrich( $binding_block );
+                        if ( is_wp_error( $validated_block ) ) {
+                            return $validated_block;
+                        }
+                        $content_result = $this->apply_content_block( $topic_id, $validated_block, $dry_run, $lesson['title'] );
                         if ( is_wp_error( $content_result ) ) {
                             return $content_result;
                         }
@@ -92,7 +101,7 @@ class CO360_LDNLMCP_Learndash_Engine {
                             array(
                                 'stage' => 'content_block',
                                 'topic' => $lesson['title'],
-                                'status' => 'skipped',
+                                'status' => 'skipped_no_binding',
                             )
                         );
                     }

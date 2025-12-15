@@ -16,20 +16,20 @@ class CO360_LDNLMCP_MCP_Schema {
             'additionalProperties' => false,
             'properties'           => array(
                 'version' => array(
-                    'type'    => 'string',
-                    'enum'    => array( '1.1.0' ),
+                    'type' => 'string',
+                    'enum' => array( '1.1.0' ),
                 ),
                 'course'  => array(
                     'type'                 => 'object',
                     'required'             => array( 'title', 'credits', 'level', 'type', 'language', 'modules', 'final_exam' ),
                     'additionalProperties' => false,
                     'properties'           => array(
-                        'title'   => array( 'type' => 'string' ),
-                        'credits' => array( 'type' => 'integer', 'minimum' => 1 ),
-                        'level'   => array( 'type' => 'string' ),
-                        'type'    => array( 'type' => 'string' ),
-                        'language'=> array( 'type' => 'string' ),
-                        'modules' => array(
+                        'title'    => array( 'type' => 'string' ),
+                        'credits'  => array( 'type' => 'integer', 'minimum' => 1 ),
+                        'level'    => array( 'type' => 'string' ),
+                        'type'     => array( 'type' => 'string' ),
+                        'language' => array( 'type' => 'string' ),
+                        'modules'  => array(
                             'type'  => 'array',
                             'items' => array(
                                 'type'                 => 'object',
@@ -47,24 +47,6 @@ class CO360_LDNLMCP_MCP_Schema {
                                             'properties'           => array(
                                                 'title' => array( 'type' => 'string' ),
                                                 'order' => array( 'type' => 'integer' ),
-                                                'content_block' => array(
-                                                    'oneOf' => array(
-                                                        array(
-                                                            'type' => 'null',
-                                                        ),
-                                                        array(
-                                                            'type'                 => 'object',
-                                                            'properties'           => array(
-                                                                'type'            => array( 'type' => 'string', 'enum' => array( 'elementor_template' ) ),
-                                                                'template_id'     => array( 'type' => 'number' ),
-                                                                'acf_fields'      => array( 'type' => 'object' ),
-                                                                'gravity_form_id' => array( 'type' => array( 'number', 'null' ) ),
-                                                            ),
-                                                            'required'             => array( 'type', 'template_id', 'acf_fields' ),
-                                                            'additionalProperties' => false,
-                                                        ),
-                                                    ),
-                                                ),
                                             ),
                                         ),
                                     ),
