@@ -48,22 +48,21 @@ class CO360_LDNLMCP_MCP_Schema {
                                                 'title' => array( 'type' => 'string' ),
                                                 'order' => array( 'type' => 'integer' ),
                                                 'content_block' => array(
-                                                    'type'                 => array( 'object', 'null' ),
-                                                    'required'             => array( 'type', 'template_id' ),
-                                                    'additionalProperties' => false,
-                                                    'properties'           => array(
-                                                        'type'            => array( 'type' => 'string', 'enum' => array( 'elementor_template' ) ),
-                                                        'template_id'     => array( 'type' => 'integer', 'minimum' => 1 ),
-                                                        'acf_fields'      => array(
-                                                            'type'                 => array( 'object', 'null' ),
-                                                            'additionalProperties' => false,
-                                                            'patternProperties'    => array(
-                                                                '.*' => array(
-                                                                    'type' => array( 'string', 'integer', 'number', 'boolean', 'null' ),
-                                                                ),
-                                                            ),
+                                                    'oneOf' => array(
+                                                        array(
+                                                            'type' => 'null',
                                                         ),
-                                                        'gravity_form_id' => array( 'type' => array( 'integer', 'null' ) ),
+                                                        array(
+                                                            'type'                 => 'object',
+                                                            'properties'           => array(
+                                                                'type'            => array( 'type' => 'string', 'enum' => array( 'elementor_template' ) ),
+                                                                'template_id'     => array( 'type' => 'number' ),
+                                                                'acf_fields'      => array( 'type' => 'object' ),
+                                                                'gravity_form_id' => array( 'type' => array( 'number', 'null' ) ),
+                                                            ),
+                                                            'required'             => array( 'type', 'template_id', 'acf_fields' ),
+                                                            'additionalProperties' => false,
+                                                        ),
                                                     ),
                                                 ),
                                             ),

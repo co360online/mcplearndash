@@ -38,13 +38,16 @@ class CO360_LDNLMCP_NL_Course_Page {
         $selected_template = isset( $_POST['co360_ldnlmcp_template'] ) ? intval( $_POST['co360_ldnlmcp_template'] ) : 0;
         $selected_form     = isset( $_POST['co360_ldnlmcp_form'] ) ? intval( $_POST['co360_ldnlmcp_form'] ) : 0;
 
-        $elementor_scanner = new CO360_LDNLMCP_Elementor_Scanner();
+        $elementor_scanner   = new CO360_LDNLMCP_Elementor_Scanner();
         $elementor_templates = $elementor_scanner->list_templates();
-        $gf_scanner = new CO360_LDNLMCP_GravityForms_Scanner();
-        $gf_forms = $gf_scanner->list_forms();
-        $acf_scanner = new CO360_LDNLMCP_ACF_Scanner();
+        $gf_scanner          = new CO360_LDNLMCP_GravityForms_Scanner();
+        $gf_forms            = $gf_scanner->list_forms();
+        $acf_scanner         = new CO360_LDNLMCP_ACF_Scanner();
         $acf_fields_for_template = $selected_template ? $acf_scanner->get_fields_for_template( $selected_template ) : array();
-        $content_section_available = ! empty( $elementor_templates ) || ! empty( $gf_forms );
+        $content_section_available = post_type_exists( 'elementor_library' ) || class_exists( 'GFAPI' );
+        if ( function_exists( 'error_log' ) ) {
+            error_log( sprintf( 'CO360 content section debug: templates=%d forms=%d available=%s', count( $elementor_templates ), count( $gf_forms ), $content_section_available ? 'yes' : 'no' ) );
+        }
 
         if ( isset( $_POST['co360_ldnlmcp_content_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_content_nonce'] ) ), 'co360_ldnlmcp_content' ) ) {
             $selected_topic    = isset( $_POST['co360_ldnlmcp_topic'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_topic'] ) ) : '';
