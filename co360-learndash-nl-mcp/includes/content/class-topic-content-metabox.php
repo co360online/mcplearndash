@@ -5,6 +5,13 @@
 class CO360_LDNLMCP_Topic_Content_Metabox {
 
     /**
+     * Simple re-entrancy guard to avoid infinite save loops when updating content.
+     *
+     * @var bool
+     */
+    private $is_applying = false;
+
+    /**
      * Query arg used to surface save notices.
      *
      * @var string
@@ -232,7 +239,19 @@ class CO360_LDNLMCP_Topic_Content_Metabox {
 
         update_post_meta( $post_id, '_co360_content_binding', $meta );
 
+        if ( $this->is_applying ) {
+            return;
+        }
+
+        $this->is_applying = true;
+
+        // Avoid recursive save_post triggers while updating the post content.
+        remove_action( 'save_post_sfwd-topic', array( $this, 'save_metabox' ) );
         $apply = $this->apply_binding_to_topic( $post_id, $meta, $validated );
+        add_action( 'save_post_sfwd-topic', array( $this, 'save_metabox' ) );
+
+        $this->is_applying = false;
+
         if ( is_wp_error( $apply ) ) {
             $this->add_notice( $apply->get_error_message(), 'error' );
             return;
