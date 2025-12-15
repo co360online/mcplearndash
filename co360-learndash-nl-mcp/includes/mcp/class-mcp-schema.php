@@ -56,7 +56,12 @@ class CO360_LDNLMCP_MCP_Schema {
                                                         'template_id'     => array( 'type' => 'integer', 'minimum' => 1 ),
                                                         'acf_fields'      => array(
                                                             'type'                 => array( 'object', 'null' ),
-                                                            'additionalProperties' => true,
+                                                            'additionalProperties' => false,
+                                                            'patternProperties'    => array(
+                                                                '.*' => array(
+                                                                    'type' => array( 'string', 'integer', 'number', 'boolean', 'null' ),
+                                                                ),
+                                                            ),
                                                         ),
                                                         'gravity_form_id' => array( 'type' => array( 'integer', 'null' ) ),
                                                     ),

@@ -44,7 +44,7 @@ class CO360_LDNLMCP_NL_Course_Page {
         $gf_forms = $gf_scanner->list_forms();
         $acf_scanner = new CO360_LDNLMCP_ACF_Scanner();
         $acf_fields_for_template = $selected_template ? $acf_scanner->get_fields_for_template( $selected_template ) : array();
-        $content_section_available = ! empty( $elementor_templates );
+        $content_section_available = ! empty( $elementor_templates ) || ! empty( $gf_forms );
 
         if ( isset( $_POST['co360_ldnlmcp_content_nonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_content_nonce'] ) ), 'co360_ldnlmcp_content' ) ) {
             $selected_topic    = isset( $_POST['co360_ldnlmcp_topic'] ) ? sanitize_text_field( wp_unslash( $_POST['co360_ldnlmcp_topic'] ) ) : '';
