@@ -56,6 +56,7 @@ function co360_ldnlmcp_init() {
     // Admin pages.
     if ( is_admin() ) {
         new CO360_LDNLMCP_Admin_Menu();
+        new CO360_LDNLMCP_Topic_Content_Metabox();
     }
 }
 add_action( 'plugins_loaded', 'co360_ldnlmcp_init' );

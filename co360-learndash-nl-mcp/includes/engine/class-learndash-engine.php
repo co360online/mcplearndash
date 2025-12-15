@@ -9,16 +9,12 @@ class CO360_LDNLMCP_Learndash_Engine {
      *
      * @param array $plan Execution plan.
      * @param bool  $dry_run Dry run.
-     * @param array $content_binding Optional content bindings keyed by module/lesson.
      * @return true|WP_Error
      */
-    public function execute_plan( $plan, $dry_run = false, $content_binding = array() ) {
+    public function execute_plan( $plan, $dry_run = false ) {
         $logger = new CO360_LDNLMCP_MCP_Logger();
         $logger->log( 'Ejecutando plan MCP', $plan );
         $course = $plan['course'];
-
-        $binding_model     = new CO360_LDNLMCP_Content_Binding( $content_binding );
-        $content_resolver  = new CO360_LDNLMCP_Content_Block_Resolver();
 
         if ( ! $dry_run && ! function_exists( 'learndash_get_course_id' ) && ! defined( 'LEARNDASH_VERSION' ) ) {
             return new WP_Error( 'co360_ldnlmcp_no_learndash', __( 'LearnDash no está activo. Solo puedes simular.', 'co360-ldnlmcp' ) );
@@ -85,26 +81,6 @@ class CO360_LDNLMCP_Learndash_Engine {
                         $this->set_course_for_step( $topic_id, $course_id, $lesson_id );
                     }
 
-                    $binding_block = $binding_model->get_content_block( $module_index, $lesson_index );
-                    if ( null !== $binding_block ) {
-                        $validated_block = $content_resolver->validate_and_enrich( $binding_block );
-                        if ( is_wp_error( $validated_block ) ) {
-                            return $validated_block;
-                        }
-                        $content_result = $this->apply_content_block( $topic_id, $validated_block, $dry_run, $lesson['title'] );
-                        if ( is_wp_error( $content_result ) ) {
-                            return $content_result;
-                        }
-                    } else {
-                        ( new CO360_LDNLMCP_MCP_Logger() )->log(
-                            'Tema sin content_block',
-                            array(
-                                'stage' => 'content_block',
-                                'topic' => $lesson['title'],
-                                'status' => 'skipped_no_binding',
-                            )
-                        );
-                    }
                 }
             }
 
@@ -182,63 +158,4 @@ class CO360_LDNLMCP_Learndash_Engine {
         }
     }
 
-    /**
-     * Apply content block to a topic.
-     *
-     * @param int   $topic_id      Topic ID (0 in dry-run).
-     * @param array $content_block Content block definition.
-     * @param bool  $dry_run       Simulation flag.
-     * @param string $topic_title  Topic title for logs.
-     *
-     * @return true|WP_Error
-     */
-    private function apply_content_block( $topic_id, $content_block, $dry_run, $topic_title ) {
-        $logger = new CO360_LDNLMCP_MCP_Logger();
-        $context = array(
-            'stage'        => 'content_block',
-            'topic'        => $topic_title,
-            'template_id'  => $content_block['template_id'],
-            'acf_fields'   => isset( $content_block['acf_fields'] ) ? array_keys( $content_block['acf_fields'] ) : array(),
-            'gravity_form' => isset( $content_block['gravity_form_id'] ) ? $content_block['gravity_form_id'] : null,
-        );
-
-        if ( $dry_run ) {
-            $logger->log( 'Simulación: se aplicaría content_block', array_merge( $context, array( 'status' => 'simulated' ) ) );
-            return true;
-        }
-
-        if ( ! class_exists( '\Elementor\Plugin' ) ) {
-            return new WP_Error( 'co360_ldnlmcp_elementor_missing', __( 'Elementor no está activo para renderizar el template.', 'co360-ldnlmcp' ) );
-        }
-
-        $content = '';
-        $template_content = \Elementor\Plugin::$instance->frontend->get_builder_content_for_display( intval( $content_block['template_id'] ), true );
-        if ( $template_content ) {
-            $content .= $template_content;
-        }
-
-        if ( ! empty( $content_block['gravity_form_id'] ) ) {
-            $content .= '\n' . do_shortcode( '[gravityform id="' . intval( $content_block['gravity_form_id'] ) . '" title="false" description="false"]' );
-        }
-
-        if ( ! empty( $content_block['acf_fields'] ) ) {
-            foreach ( $content_block['acf_fields'] as $field_key => $value ) {
-                if ( function_exists( 'update_field' ) ) {
-                    update_field( $field_key, $value, $topic_id );
-                } else {
-                    update_post_meta( $topic_id, $field_key, $value );
-                }
-            }
-        }
-
-        if ( ! empty( $content ) ) {
-            wp_update_post( array(
-                'ID'           => $topic_id,
-                'post_content' => $content,
-            ) );
-        }
-
-        $logger->log( 'Content block aplicado', array_merge( $context, array( 'status' => 'applied' ) ) );
-        return true;
-    }
 }

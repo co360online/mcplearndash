@@ -50,6 +50,15 @@ class CO360_LDNLMCP_Admin_Menu {
             'co360-ldnlmcp-execute',
             array( $this, 'render_execute_page' )
         );
+
+        add_submenu_page(
+            'co360-ldnlmcp',
+            __( 'Ayuda – Contenido de los Temas', 'co360-ldnlmcp' ),
+            __( 'Ayuda', 'co360-ldnlmcp' ),
+            'manage_options',
+            'co360-ldnlmcp-help-content',
+            array( $this, 'render_help_page' )
+        );
     }
 
     /**
@@ -81,6 +90,14 @@ class CO360_LDNLMCP_Admin_Menu {
      */
     public function render_execute_page() {
         $page = new CO360_LDNLMCP_Execute_MCP_Page();
+        $page->render();
+    }
+
+    /**
+     * Render help page.
+     */
+    public function render_help_page() {
+        $page = new CO360_LDNLMCP_Help_Page();
         $page->render();
     }
 }
