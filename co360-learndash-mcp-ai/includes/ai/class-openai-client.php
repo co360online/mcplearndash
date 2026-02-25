@@ -36,10 +36,10 @@ class CO360_LDMCP_OpenAI_Client {
     public function generate_json( string $model, array $messages, array $schema, array $params = [] ) {
         $endpoint = 'https://api.openai.com/v1/responses';
         $body     = [
-            'model'           => $model,
-            'messages'        => $messages,
-            'response_format' => [
-                'type'        => 'json_schema',
+            'model'    => $model,
+            'messages' => $messages,
+            'text'     => [
+                'format'      => 'json_schema',
                 'json_schema' => [
                     'name'   => $schema['name'] ?? 'LearnDashCourseMCP',
                     'schema' => $schema['schema'] ?? [],
