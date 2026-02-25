@@ -52,8 +52,12 @@ class CO360_LDMCP_MCP_Schema {
             'objectives'      => [ 'type' => 'array', 'items' => [ 'type' => 'string' ] ],
             'credits'         => [ 'type' => 'integer' ],
             'duration_hours'  => [ 'type' => 'integer' ],
-            'editorial_notes' => [ 'type' => 'string' ],
-            'settings'        => [ 'type' => 'object' ],
+            'editorial_notes'      => [ 'type' => 'string' ],
+            'course_start_ts'     => [ 'type' => 'integer' ],
+            'course_end_ts'       => [ 'type' => 'integer' ],
+            'course_start_date_raw' => [ 'type' => 'string' ],
+            'course_end_date_raw'   => [ 'type' => 'string' ],
+            'settings'            => [ 'type' => 'object' ],
             'lessons'         => [
                 'type'  => 'array',
                 'items' => [

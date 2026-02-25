@@ -27,4 +27,22 @@ class CO360_LDMCP_MCP_Logger {
         );
         update_option( 'co360_ldmcp_logs', $logs );
     }
+
+
+    /**
+     * Store stage log entry.
+     *
+     * @param string $stage Stage identifier.
+     * @param array  $data Stage payload.
+     * @return void
+     */
+    public function log_stage( string $stage, array $data = [] ): void {
+        $this->log(
+            [
+                'stage' => $stage,
+                'data'  => $data,
+            ]
+        );
+    }
+
 }

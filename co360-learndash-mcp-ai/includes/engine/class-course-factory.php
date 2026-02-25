@@ -28,6 +28,32 @@ class CO360_LDMCP_Course_Factory {
             update_post_meta( $course_id, 'co360_editorial_notes', sanitize_textarea_field( $course['editorial_notes'] ) );
         }
 
+        if ( isset( $course['course_start_ts'] ) && is_numeric( $course['course_start_ts'] ) ) {
+            $start_ts = (int) $course['course_start_ts'];
+            update_post_meta( $course_id, '_co360_course_start_date', $start_ts );
+            if ( isset( $course['course_start_date_raw'] ) ) {
+                update_post_meta( $course_id, '_co360_course_start_date_raw', sanitize_text_field( (string) $course['course_start_date_raw'] ) );
+            }
+
+            if ( function_exists( 'learndash_update_setting' ) ) {
+                learndash_update_setting( $course_id, 'access_from', $start_ts );
+            }
+        }
+
+        if ( isset( $course['course_end_ts'] ) && is_numeric( $course['course_end_ts'] ) ) {
+            $end_ts = (int) $course['course_end_ts'];
+            update_post_meta( $course_id, '_co360_course_end_date', $end_ts );
+            if ( isset( $course['course_end_date_raw'] ) ) {
+                update_post_meta( $course_id, '_co360_course_end_date_raw', sanitize_text_field( (string) $course['course_end_date_raw'] ) );
+            }
+
+            if ( isset( $start_ts ) && $end_ts >= $start_ts && function_exists( 'learndash_update_setting' ) ) {
+                $seconds = $end_ts - $start_ts;
+                $days    = (int) ceil( $seconds / DAY_IN_SECONDS );
+                learndash_update_setting( $course_id, 'expire_access_days', max( 0, $days ) );
+            }
+        }
+
         return $course_id;
     }
 }

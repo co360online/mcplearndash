@@ -35,6 +35,15 @@ class CO360_LDMCP_Execute_MCP_Page {
                 $result = [ 'error' => $validation->get_error_message() ];
             } else {
                 $payload = apply_filters( 'co360_mcp_before_execute', $payload );
+                $logger->log_stage(
+                    'dates_detected',
+                    [
+                        'start_raw' => $payload['course']['course_start_date_raw'] ?? null,
+                        'end_raw'   => $payload['course']['course_end_date_raw'] ?? null,
+                        'start_ts'  => isset( $payload['course']['course_start_ts'] ) ? (int) $payload['course']['course_start_ts'] : null,
+                        'end_ts'    => isset( $payload['course']['course_end_ts'] ) ? (int) $payload['course']['course_end_ts'] : null,
+                    ]
+                );
                 $plan    = $resolver->resolve_plan( $payload );
                 $result  = $engine->execute_plan( $plan, (bool) $payload['dry_run'] );
                 $logger->log(

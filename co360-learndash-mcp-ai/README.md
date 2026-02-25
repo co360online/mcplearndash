@@ -9,6 +9,7 @@ Plugin de producción para definir y ejecutar Model Context Protocols (MCP) apli
 - Motor de ejecución que resuelve MCP → acciones LearnDash (cursos, lecciones, topics, cuestionarios) con hooks `co360_mcp_before_execute` y `co360_mcp_after_execute`.
 - Plantillas MCP reutilizables y librería de prompts orientada a cursos médicos.
 - Logs estructurados de cada ejecución para auditoría.
+- Detección determinista de fechas opcionales desde el briefing (`Inicio del curso` / `Fin del curso` o `Fecha de inicio` / `Fecha de finalización`) con guardado en metas `_co360_*` y validación de rango.
 
 ## Estructura del plugin
 Consulte los archivos bajo `includes/` para la separación de responsabilidades (core, engine, ai, admin, utils, logs).
@@ -18,6 +19,7 @@ Consulte los archivos bajo `includes/` para la separación de responsabilidades 
 2. Genere un MCP desde **CO360 MCP → Generar MCP** usando un briefing y tipo de curso.
 3. Revise/edite el JSON generado y ejecútelo en **CO360 MCP → Ejecutar MCP**. Puede activar `dry_run` para pruebas.
 4. Consulte logs en la opción de ajustes o mediante `get_option( 'co360_ldmcp_logs' )`.
+5. Opcionalmente, en el briefing añada fechas como `Inicio del curso: 2026-03-01` y `Fin del curso: 2026-06-30` (también se admite `DD/MM/YYYY`).
 
 ## Extensión futura
 - Añadir nuevos MCPs al registro (p. ej. `LearnDashQuizMCP`, `CertificateMCP`).

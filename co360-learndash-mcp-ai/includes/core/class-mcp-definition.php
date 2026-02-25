@@ -52,6 +52,19 @@ class CO360_LDMCP_MCP_Definition {
             }
         }
 
+
+        if ( isset( $course['course_start_ts'] ) && ! is_numeric( $course['course_start_ts'] ) ) {
+            return new WP_Error( 'co360_invalid_course_start', 'La fecha de inicio del curso es inválida.' );
+        }
+
+        if ( isset( $course['course_end_ts'] ) && ! is_numeric( $course['course_end_ts'] ) ) {
+            return new WP_Error( 'co360_invalid_course_end', 'La fecha de fin del curso es inválida.' );
+        }
+
+        if ( isset( $course['course_start_ts'], $course['course_end_ts'] ) && (int) $course['course_start_ts'] > (int) $course['course_end_ts'] ) {
+            return new WP_Error( 'co360_invalid_course_dates_order', 'La fecha de inicio no puede ser posterior a la fecha de fin.' );
+        }
+
         if ( ! empty( $course['lessons'] ) ) {
             foreach ( $course['lessons'] as $lesson_index => $lesson ) {
                 $result = $this->validate_lesson( $lesson, $lesson_index );

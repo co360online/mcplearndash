@@ -44,10 +44,31 @@ class CO360_LDMCP_MCP_AI_Generator {
             [ 'role' => 'user', 'content' => $course_prompt . '\nBriefing: ' . $briefing ],
         ];
 
-        $model  = get_option( 'co360_ldmcp_model', 'gpt-4.1' );
-        $schema = $this->schema->get_schema();
+        $model      = get_option( 'co360_ldmcp_model', 'gpt-4.1' );
+        $schema     = $this->schema->get_schema();
+        $date_parts = CO360_LDMCP_Utils::extract_course_dates_from_briefing( $briefing );
 
-        return $this->client->generate_json( $model, $messages, $schema );
+        if ( ! empty( $date_parts['error'] ) ) {
+            return new WP_Error( 'co360_invalid_dates', $date_parts['error'], $date_parts );
+        }
+
+        $result = $this->client->generate_json( $model, $messages, $schema );
+        if ( is_wp_error( $result ) ) {
+            return $result;
+        }
+
+        if ( isset( $result['course'] ) && is_array( $result['course'] ) ) {
+            if ( null !== $date_parts['course_start_ts'] ) {
+                $result['course']['course_start_ts']       = $date_parts['course_start_ts'];
+                $result['course']['course_start_date_raw'] = $date_parts['course_start_date_raw'];
+            }
+            if ( null !== $date_parts['course_end_ts'] ) {
+                $result['course']['course_end_ts']       = $date_parts['course_end_ts'];
+                $result['course']['course_end_date_raw'] = $date_parts['course_end_date_raw'];
+            }
+        }
+
+        return $result;
     }
 
     /**
